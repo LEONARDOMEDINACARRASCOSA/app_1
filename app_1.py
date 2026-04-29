@@ -1,51 +1,59 @@
 import streamlit as st
 from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Usando secrets (mais seguro)
-URL_NEON = st.secrets["database_url"]
+# url  -  banco de dados
+URL_NEON = 'postgresql://neondb_owner:***************@ep-aged-snow-an189k6m-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 
 engine = create_engine(URL_NEON)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
+# --- 2. O ORM (MAPEAMENTO) ---
+# Explique que esta classe vira a tabela no banco de dados
 class Itinerario(Base):
-    __tablename__ = 'itinerario'
+    __tablename__ = 'itinerarios_aula'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String)
+    descricao = Column(String)
 
-    id = Column(Integer, primary_key=True)
-    nome = Column(String, nullable=False)
-    descricao = Column(String, nullable=False)
-
+# Comando que cria a tabela no Neon automaticamente
 Base.metadata.create_all(engine)
 
-st.set_page_config(page_title="Cadastro de Itinerário", page_icon="✈️")
-st.title("Cadastro de Itinerário 2026")
-st.info("Os dados serão salvos diretamente no PostgreSQL da nuvem Neon")
 
-with st.form("formulario", clear_on_submit=True):
+
+
+
+# FRAME STREAMLIT INTERFACE GRAFICA 
+st.set_page_config(page_title="Aula SQL + ORM", page_icon="")
+st.title(" Cadastro de Itinerários 2026")
+st.info("Os dados abaixo serão salvos diretamente no PostgreSQL da nuvem (Neon.tech).")
+
+with st.form("form_itinerario", clear_on_submit=True):
     nome_input = st.text_input("Nome do Itinerário")
-    desc_input = st.text_area("Descrição do Itinerário")
-    botao = st.form_submit_button("Salvar Dados")
+    desc_input = st.text_area("Breve Descrição")
+    botao = st.form_submit_button("Salvar no Banco de Dados")
 
 if botao:
-    if nome_input.strip() and desc_input.strip():
-        with Session() as session:
-            novo_registro = Itinerario(nome=nome_input, descricao=desc_input)
-            session.add(novo_registro)
-            session.commit()
-
-        st.success(f"Sucesso! O itinerário '{nome_input}' foi salvo!")
+    if nome_input:
+        # O ORM traduzindo o objeto para SQL e salvando
+        session = Session()
+        novo_registro = Itinerario(nome=nome_input, descricao=desc_input)
+        session.add(novo_registro)
+        session.commit()
+        session.close()
+        st.success(f"Sucesso! '{nome_input}' foi gravado no Neon Tech.")
     else:
-        st.error("Por favor, preencha todos os campos corretamente!")
+        st.error("Por favor, preencha o nome do itinerário.")
 
+# --- VISUALIZAÇÃO EM TEMPO REAL ---
 st.divider()
-st.subheader("Registros Atuais")
-
-with Session() as session:
-    dados = session.query(Itinerario).all()
+st.subheader("Registros Atuais no Postgres")
+session = Session()
+dados = session.query(Itinerario).all()
+session.close()
 
 if dados:
     for item in dados:
-        st.write(f"{item.nome}: {item.descricao}")
-else:
-    st.info("Nenhum itinerário encontrado.")
+        st.write(f" **{item.nome}**: {item.descricao}")
