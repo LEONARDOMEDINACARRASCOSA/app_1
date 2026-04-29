@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # url  -  banco de dados
-URL_NEON = 'postgresql://neondb_owner:***************@ep-aged-snow-an189k6m-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+URL_NEON = 'postgresql://neondb_owner:npg_1mJSuvTRgh5l@ep-billowing-bread-anq43cnq-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 
 engine = create_engine(URL_NEON)
 Session = sessionmaker(bind=engine)
